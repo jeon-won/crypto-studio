@@ -1,10 +1,7 @@
-# .env 파일 생성 후 아래 변수값 명시해야 함
-#  - POSTGRES_USER
-#  - POSTGRES_PASSWORD
-#  - POSTGRES_DB
-#  - POSTGRES_PORT
+# .env 파일 참조 필요
+# 예: 심볼릭 링크 생성(ln -s ../../.env .env)
 
-name: crypto-studio-db
+name: crypto-studio
 services:
   db:
     container_name: db
@@ -15,8 +12,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - data_db:/var/lib/postgresql/data
+      - data-db:/var/lib/postgresql/data
     ports:
       - "${POSTGRES_PORT}:5432"
 volumes:
-  data_db:
+  data-db:
