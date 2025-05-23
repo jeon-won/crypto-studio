@@ -1,3 +1,9 @@
+# .env 파일 생성 후 아래 변수값 명시해야 함
+#  - POSTGRES_USER
+#  - POSTGRES_PASSWORD
+#  - POSTGRES_DB
+#  - POSTGRES_PORT
+
 name: crypto-studio-db
 services:
   db:
@@ -11,6 +17,6 @@ services:
     volumes:
       - data_db:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT}:5432"
 volumes:
   data_db:
