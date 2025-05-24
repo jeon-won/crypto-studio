@@ -15,5 +15,10 @@ services:
       - data-db:/var/lib/postgresql/data
     ports:
       - "${POSTGRES_PORT}:5432"
+    networks:
+      - cs-net
 volumes:
   data-db:
+networks:
+  cs-net:
+    driver: bridge
