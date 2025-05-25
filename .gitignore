@@ -174,4 +174,4 @@ cython_debug/
 .pypirc
 
 # MacOS
-DS_Store
+.DS_Store

@@ -25,14 +25,15 @@ timeframe = "15m"
 time_zone = timezone(timedelta(hours=9))  ## GMT+9: 한국 시간
 postgres_table = "btc_15m"
 
+# 코드 --------------------------------------------------
+
 if __name__ == "__main__":
-    # Binance 선물 거래소 초기화
+    # CCXT 및 PostgreSQL 관련 객체 초기화
     exchange = ccxt.binance({
         'options': {
             'defaultType': 'future' ## 선물 거래하므로 넣어봤음
         }
     })
-    # DB 연결 정보 설정
     conn = psycopg2.connect(
         dbname=POSTGRES_DB,
         user=POSTGRES_USER,
