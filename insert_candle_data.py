@@ -28,38 +28,10 @@ postgres_table = "btc_15m"
 if __name__ == "__main__":
     # Binance 선물 거래소 초기화
     exchange = ccxt.binance({
-    'options': {
-        'defaultType': 'future' ## 선물 거래하므로 넣어봤음
-    }
+        'options': {
+            'defaultType': 'future' ## 선물 거래하므로 넣어봤음
+        }
     })
-
-    # 캔들 데이터 가져오기
-    ohlcvs = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=201)
-    ohlcvs_current = ohlcvs[1:] ## 현재 시점의 캔들 RSI 계산을 위한 배열
-    ohlcvs_prev = ohlcvs[:-1]   ## 직전 시점의 캔들 RSI 계산을 위한 배열
-
-    # 현재 캔들 데이터 가공
-    ohlcv_current = [
-        datetime.fromtimestamp(ohlcvs_current[-1][0] / 1000, tz=time_zone),  ## 시간(GMT+9 기준)
-        ohlcvs_current[-1][1],         ## 시가
-        ohlcvs_current[-1][2],         ## 고가
-        ohlcvs_current[-1][3],         ## 저가
-        ohlcvs_current[-1][4],         ## 종가
-        ohlcvs_current[-1][5],         ## 거래량
-        calculate_rsi(ohlcvs_current)  ## RSI 값
-    ]
-
-    # 직전 캔들 데이터 가공
-    ohlcv_prev = [
-        datetime.fromtimestamp(ohlcvs_prev[-1][0] / 1000, tz=time_zone),  ## 시간(GMT+9 기준)
-        ohlcvs_prev[-1][1],         ## 시가
-        ohlcvs_prev[-1][2],         ## 고가
-        ohlcvs_prev[-1][3],         ## 저가
-        ohlcvs_prev[-1][4],         ## 종가
-        ohlcvs_prev[-1][5],         ## 거래량
-        calculate_rsi(ohlcvs_prev)  ## RSI 값
-    ]
-
     # DB 연결 정보 설정
     conn = psycopg2.connect(
         dbname=POSTGRES_DB,
@@ -69,6 +41,31 @@ if __name__ == "__main__":
         port=POSTGRES_PORT
     )
     cur = conn.cursor()
+
+    # 캔들 데이터 가져오기
+    ohlcvs = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=201)
+    ohlcvs_current = ohlcvs[1:] ## 현재 시점의 캔들 RSI 계산을 위한 배열
+    ohlcvs_prev = ohlcvs[:-1]   ## 직전 시점의 캔들 RSI 계산을 위한 배열
+
+    # 직전 및 현재 캔들 데이터 가공
+    ohlcv_prev = [
+        datetime.fromtimestamp(ohlcvs_prev[-1][0] / 1000, tz=time_zone),  ## 시간(GMT+9 기준)
+        ohlcvs_prev[-1][1],         ## 시가
+        ohlcvs_prev[-1][2],         ## 고가
+        ohlcvs_prev[-1][3],         ## 저가
+        ohlcvs_prev[-1][4],         ## 종가
+        ohlcvs_prev[-1][5],         ## 거래량
+        calculate_rsi(ohlcvs_prev)  ## RSI 값
+    ]
+    ohlcv_current = [
+        datetime.fromtimestamp(ohlcvs_current[-1][0] / 1000, tz=time_zone),  ## 시간(GMT+9 기준)
+        ohlcvs_current[-1][1],         ## 시가
+        ohlcvs_current[-1][2],         ## 고가
+        ohlcvs_current[-1][3],         ## 저가
+        ohlcvs_current[-1][4],         ## 종가
+        ohlcvs_current[-1][5],         ## 거래량
+        calculate_rsi(ohlcvs_current)  ## RSI 값
+    ]
 
     # DB 데이터 INSERT 쿼리(충돌 시 UPDATE 수행)
     sql_insert = f"""
@@ -86,15 +83,6 @@ if __name__ == "__main__":
     # 쿼리 실행 및 커밋
     try:
         cur.execute(sql_insert, (
-            ohlcv_current[0],
-            ohlcv_current[1],
-            ohlcv_current[2],
-            ohlcv_current[3],
-            ohlcv_current[4],
-            ohlcv_current[5],
-            ohlcv_current[6]
-        ))
-        cur.execute(sql_insert, (
             ohlcv_prev[0],
             ohlcv_prev[1],
             ohlcv_prev[2],
@@ -102,6 +90,15 @@ if __name__ == "__main__":
             ohlcv_prev[4],
             ohlcv_prev[5],
             ohlcv_prev[6]
+        ))
+        cur.execute(sql_insert, (
+            ohlcv_current[0],
+            ohlcv_current[1],
+            ohlcv_current[2],
+            ohlcv_current[3],
+            ohlcv_current[4],
+            ohlcv_current[5],
+            ohlcv_current[6]
         ))
         conn.commit()
         print("데이터 삽입/업데이트 성공")
