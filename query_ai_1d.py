@@ -34,6 +34,7 @@ if __name__ == "__main__":
     # DB에서 비트코인 차트 데이터 가져오기
     db.init(POSTGRES_DB)
     rows = db.select(table, limit=100)
+    db.close()
     
     # 가져온 데이터를 Pandas.DataFrame으로 변환
     df = pd.DataFrame(rows, columns=[desc[0] for desc in db.cursor.description])

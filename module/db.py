@@ -63,7 +63,7 @@ def insert(table, data):
         ))
         
         conn.commit()
-        print(f"데이터 삽입 성공: {data}")
+        # print(f"데이터 삽입 성공: {data}")
     except Exception as e:
         print(f"데이터 삽입 실패: {e}")
         conn.rollback()
