@@ -3,6 +3,7 @@
 저장하는 데이터는 시간, 시가, 고가, 저가, 종가, 거래량, RSI 값입니다.
 """
 import argparse, ccxt, os, psycopg2, sys
+import module.db as db
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 from module.aux_indicator import calculate_rsi
@@ -43,20 +44,13 @@ if __name__ == "__main__":
     timeframe = args.timeframe
     postgres_table = f"btc_{args.timeframe}"
 
-    # CCXT 및 PostgreSQL 관련 객체 초기화
+    # CCXT 및 DB 초기화
     exchange = ccxt.binance({
         'options': {
             'defaultType': 'future' ## 선물 거래하므로 넣어봤음
         }
     })
-    conn = psycopg2.connect(
-        dbname=POSTGRES_DB,
-        user=POSTGRES_USER,
-        password=POSTGRES_PASSWORD,
-        host=POSTGRES_HOST,
-        port=POSTGRES_PORT
-    )
-    cur = conn.cursor()
+    db.init(POSTGRES_DB)
 
     # 캔들 데이터(Open, High, Low, Close, Volume) 가져오기
     ohlcvs = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=201)
@@ -83,44 +77,7 @@ if __name__ == "__main__":
         calculate_rsi(ohlcvs_current)
     ]
 
-    # DB 데이터 INSERT 쿼리(충돌 시 UPDATE 수행)
-    sql_insert = f"""
-    INSERT INTO {postgres_table} (time, open, high, low, close, volume, rsi)
-    VALUES (%s, %s, %s, %s, %s, %s, %s)
-    ON CONFLICT (time) DO UPDATE
-    SET open = EXCLUDED.open,
-        high = EXCLUDED.high,
-        low = EXCLUDED.low,
-        close = EXCLUDED.close,
-        volume = EXCLUDED.volume,
-        rsi = EXCLUDED.rsi;
-    """
-
-    # 쿼리 실행 및 커밋
-    try:
-        cur.execute(sql_insert, (
-            ohlcv_prev[0],
-            ohlcv_prev[1],
-            ohlcv_prev[2],
-            ohlcv_prev[3],
-            ohlcv_prev[4],
-            ohlcv_prev[5],
-            ohlcv_prev[6]
-        ))
-        cur.execute(sql_insert, (
-            ohlcv_current[0],
-            ohlcv_current[1],
-            ohlcv_current[2],
-            ohlcv_current[3],
-            ohlcv_current[4],
-            ohlcv_current[5],
-            ohlcv_current[6]
-        ))
-        conn.commit()
-        print("데이터 삽입/업데이트 성공")
-    except Exception as e:
-        conn.rollback()
-        print("에러 발생:", e)
-    finally:
-        cur.close()
-        conn.close()
+    # DB에 데이터 삽입 후 연결 종료
+    db.insert(postgres_table, ohlcv_prev)
+    db.insert(postgres_table, ohlcv_current)
+    db.close()
