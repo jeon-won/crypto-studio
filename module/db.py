@@ -102,7 +102,8 @@ def close():
         conn.close()
 
 # if __name__ == "__main__":
-#     init("binance")
-#     insert("btc_15m", [time, open, high, low, close, volume, rsi])
-#     rows = select("btc_4h", limit=50)
-#     print(rows)
+    # init("binance")
+    # insert("btc_15m", [time, open, high, low, close, volume, rsi])
+    # rows = select("btc_4h", limit=50)
+    # print(rows)
+    # close()
