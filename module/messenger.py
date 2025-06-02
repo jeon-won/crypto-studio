@@ -28,7 +28,8 @@ def send_discord_message(webhook_url, message):
     response = requests.post(webhook_url, headers=headers, data=json.dumps(data))
 
     if response.status_code == 204:
-        print('Message successfully sent to Discord channel.')
+        pass
+        # print('Message successfully sent to Discord channel.')
     else:
         print(f'Failed to send message to Discord channel. Status code: {response.status_code}')
 

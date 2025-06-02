@@ -17,18 +17,17 @@ POSTGRES_PORT = int(os.getenv("POSTGRES_PORT"))
 POSTGRES_USER = os.getenv("POSTGRES_USER")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_DB = os.getenv("POSTGRES_DB")
-DISCORD_WEBHOOK_1D_ANALYSIS = os.getenv("DISCORD_WEBHOOK_1D_ANALYSIS")
-PROMPT = os.getenv("PROMPT_QUERY_AI_1D")
+DISCORD_WEBHOOK_RSI_DIVERGENCE = os.getenv("DISCORD_WEBHOOK_RSI_DIVERGENCE")
+PROMPT = os.getenv("PROMPT_QUERY_AI_15M")
 
 # 전역변수 -----------------------------------------------
 
-table = "btc_1d"
+table = "btc_15m"
 
 if __name__ == "__main__":
     # 프롬프트 파싱
     prompt = PROMPT.replace('|n', '\n').replace('\\"', '"')
-    print(prompt)
-
+    
     # DB에서 비트코인 차트 데이터 가져오기
     db.init(POSTGRES_DB)
     rows = db.select(table, limit=100)
@@ -36,9 +35,9 @@ if __name__ == "__main__":
     
     # 가져온 데이터를 Pandas.DataFrame으로 변환
     df = pd.DataFrame(rows, columns=[desc[0] for desc in db.cursor.description])
-    df['time'] = df['time'].dt.tz_convert('Asia/Seoul')  ## 타임존 변환
-    df['time'] = df['time'].dt.strftime('%Y-%m-%d')      ## 또는 %Y-%m-%d %H:%M
-    df['open'] = df['open'].astype(int)                  ## OHLCV 값을 정수로 변환(OpenAI 질의 시 토큰 수 절약하기 위함)
+    df['time'] = df['time'].dt.tz_convert('Asia/Seoul')    ## 타임존 변환
+    df['time'] = df['time'].dt.strftime('%Y-%m-%d %H:%M')  ## 시간 형식 변환
+    df['open'] = df['open'].astype(int)  ## OHLCV 값을 정수로 변환(OpenAI 질의 시 토큰 수 절약하기 위함)
     df['high'] = df['high'].astype(int)
     df['low'] = df['low'].astype(int)
     df['close'] = df['close'].astype(int)
@@ -82,5 +81,6 @@ if __name__ == "__main__":
       },
     )
 
-    send_discord_message(DISCORD_WEBHOOK_1D_ANALYSIS, response.output[1].content[0].text)
-    # print(response.output[1].content[0].text)
+    # 디스코드로 메시지 전송
+    send_discord_message(DISCORD_WEBHOOK_RSI_DIVERGENCE, response.output[1].content[0].text)
+    print(response.output[1].content[0].text)
