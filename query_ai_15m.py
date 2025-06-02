@@ -7,6 +7,8 @@ from openai import OpenAI
 import module.db as db
 import os
 import pandas as pd
+import json
+from datetime import datetime
 
 # 상수 --------------------------------------------------
 
@@ -30,7 +32,7 @@ if __name__ == "__main__":
     
     # DB에서 비트코인 차트 데이터 가져오기
     db.init(POSTGRES_DB)
-    rows = db.select(table, limit=100)
+    rows = db.select(table, limit=50)
     db.close()
     
     # 가져온 데이터를 Pandas.DataFrame으로 변환
@@ -77,10 +79,30 @@ if __name__ == "__main__":
         # },
       ],
       reasoning={
-        "effort": "high"
+        "effort": "medium"  ## low, medium, high
       },
     )
 
-    # 디스코드로 메시지 전송
-    send_discord_message(DISCORD_WEBHOOK_RSI_DIVERGENCE, response.output[1].content[0].text)
-    print(response.output[1].content[0].text)
+    # 응답 파싱
+    result = json.loads(response.output[1].content[0].text)
+    decision = result.get('decision')
+    reason = result.get('reason')
+  
+    # decision 값이 'bullish' 또는 'bearish'인 경우 한글로 변환
+    if decision == 'bullish':
+        decision = '📈 상승 다이버전스'
+    elif decision == 'bearish':
+        decision = '📉 하락 다이버전스'
+    else:
+        pass
+
+    # 메신저로 보낼 메시지 작성
+    message = f"""# {decision} 알림
+* 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+* 판단이유: {reason}
+"""
+    print(message)
+
+    # 다이버전스 발생 판단 시 디스코드로 메시지 전송
+    if decision != "none":
+        send_discord_message(DISCORD_WEBHOOK_RSI_DIVERGENCE, message)
