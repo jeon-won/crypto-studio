@@ -13,7 +13,7 @@ from datetime import datetime
 # 상수 --------------------------------------------------
 
 load_dotenv()
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 POSTGRES_HOST = os.getenv("POSTGRES_HOST")
 POSTGRES_PORT = int(os.getenv("POSTGRES_PORT"))
 POSTGRES_USER = os.getenv("POSTGRES_USER")
@@ -25,6 +25,8 @@ PROMPT = os.getenv("PROMPT_QUERY_AI_15M")
 # 전역변수 -----------------------------------------------
 
 table = "btc_15m"
+
+# 코드 --------------------------------------------------
 
 if __name__ == "__main__":
     # 프롬프트 파싱
