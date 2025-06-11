@@ -4,9 +4,10 @@
 from dotenv import load_dotenv
 from module.messenger import send_discord_message
 from openai import OpenAI
+from prompt import PROMPT_QUERY_AI_1D
 import module.db as db
-import os
 import pandas as pd
+import os
 
 # 상수 --------------------------------------------------
 
@@ -25,13 +26,9 @@ PROMPT = os.getenv("PROMPT_QUERY_AI_1D")
 table = "btc_1d"
 
 if __name__ == "__main__":
-    # 프롬프트 파싱
-    prompt = PROMPT.replace('|n', '\n').replace('\\"', '"')
-    print(prompt)
-
     # DB에서 비트코인 차트 데이터 가져오기
     db.init(POSTGRES_DB)
-    rows = db.select(table, limit=100)
+    rows = db.select_all(table, limit=100)
     db.close()
     
     # 가져온 데이터를 Pandas.DataFrame으로 변환
@@ -54,7 +51,7 @@ if __name__ == "__main__":
           "content": [
             {
               "type": "input_text",
-              "text": prompt
+              "text": PROMPT_QUERY_AI_1D
             }
           ]
         },

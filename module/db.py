@@ -28,6 +28,7 @@ def init(dbname):
         print(f"DB 연결 실패: {e}")
         sys.exit(1)
 
+
 def insert(table, data):
     """
     지정된 테이블에 데이터를 삽입합니다. 만약 데이터가 이미 존재한다면 업데이트합니다."
@@ -68,9 +69,10 @@ def insert(table, data):
         print(f"데이터 삽입 실패: {e}")
         conn.rollback()
 
-def select(table, limit=50):
+
+def select_all(table, limit=50):
     """
-    지정된 테이블에서 데이터를 조회합니다.
+    지정된 테이블에서 모든 컬럼의 데이터를 조회합니다.
 
     :param table: 데이터베이스 테이블 이름
     :param limit: 조회할 데이터의 최대 개수
@@ -89,6 +91,30 @@ def select(table, limit=50):
     except Exception as e:
         print(f"데이터 조회 실패: {e}")
         return []
+
+
+def select_close(table, limit=50):
+    """
+    지정된 테이블에서 time, close, rsi 컬럼 데이터를 조회합니다.
+
+    :param table: 데이터베이스 테이블 이름
+    :param limit: 조회할 데이터의 최대 개수
+    :return: 조회된 데이터의 리스트
+    """
+    global conn, cursor
+    
+    try:
+        if not conn or not cursor:
+            raise Exception("DB 연결이 초기화되지 않았습니다.")
+        
+        query = f"SELECT time, close, rsi FROM {table} ORDER BY time DESC LIMIT %s;"
+        cursor.execute(query, (limit,))
+        rows = cursor.fetchall()
+        return rows
+    except Exception as e:
+        print(f"데이터 조회 실패: {e}")
+        return []
+
 
 def close():
     """

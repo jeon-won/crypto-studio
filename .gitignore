@@ -176,3 +176,6 @@ cython_debug/
 
 # MacOS
 .DS_Store
+
+# etc.
+prompt.py
