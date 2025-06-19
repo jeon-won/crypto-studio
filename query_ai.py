@@ -21,55 +21,58 @@ POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_DB = os.getenv("POSTGRES_DB")
 DISCORD_WEBHOOK_RSI_DIVERGENCE = os.getenv("DISCORD_WEBHOOK_RSI_DIVERGENCE")
 
+# 함수 --------------------------------------------------
+
+def get_cr_dataframe(timeframe: str, limit: int = 25):
+    """
+    Pandas.DataFrame 형태의 비트코인 데이터(종가, RSI)를 반환합니다.
+    
+    Args: 
+        - timeframe: str (예: 15m은 15분봉, 1h는 1시간 봉)
+        - limit: 가져올 캔들 데이터 개수 (기본: 25)
+    
+    Returns: DataFrame
+    """
+    # DB에서 비트코인 차트 데이터 가져오기
+    db.init(POSTGRES_DB)
+    rows = db.select_close(f"btc_{timeframe}", limit)
+    db.close()
+
+    # 비트코인 차트 데이터를 Pandas.DataFrame 데이터로 변환
+    df = pd.DataFrame(rows, columns=["time", "close", "rsi"])
+    df['time'] = df['time'].dt.tz_convert('Asia/Seoul')    ## 타임존 변환
+    df['time'] = df['time'].dt.strftime('%Y-%m-%d %H:%M')  ## 시간 형식 변환
+    df['close'] = df['close'].astype(int)
+
+    return df
+
 # 코드 --------------------------------------------------
 
 if __name__ == "__main__":
-    # DB에서 비트코인 차트 데이터 가져오기
-    db.init(POSTGRES_DB)
-    rows_15m = db.select_close("btc_15m", limit=25)
-    rows_1h = db.select_close("btc_1h", limit=25)
-    rows_4h = db.select_close("btc_4h", limit=25)
-    db.close()
-    
-    # 가져온 데이터를 Pandas.DataFrame으로 변환
-    df_15m = pd.DataFrame(rows_15m, columns=["time", "close", "rsi"])
-    df_15m['time'] = df_15m['time'].dt.tz_convert('Asia/Seoul')    ## 타임존 변환
-    df_15m['time'] = df_15m['time'].dt.strftime('%Y-%m-%d %H:%M')  ## 시간 형식 변환
-    df_15m['close'] = df_15m['close'].astype(int)
-    
-    df_1h = pd.DataFrame(rows_1h, columns=["time", "close", "rsi"])
-    df_1h['time'] = df_1h['time'].dt.tz_convert('Asia/Seoul')
-    df_1h['time'] = df_1h['time'].dt.strftime('%Y-%m-%d %H:%M')
-    df_1h['close'] = df_1h['close'].astype(int)
-    
-    df_4h = pd.DataFrame(rows_4h, columns=["time", "close", "rsi"])
-    df_4h['time'] = df_4h['time'].dt.tz_convert('Asia/Seoul')
-    df_4h['time'] = df_4h['time'].dt.strftime('%Y-%m-%d %H:%M')
-    df_4h['close'] = df_4h['close'].astype(int)
+    # 변수
+    current_time = datetime.now()  ## 현재 시간
+    hour   = current_time.hour     ## 현재 시
+    minute = current_time.minute   ## 현재 분
+    second = current_time.second   ## 현재 초
+    json_data = None               ## OpenAI에 질의할 비트코인 데이터
 
-    current_time = datetime.now()
-    hour   = current_time.hour
-    minute = current_time.minute
+    # 타임프레임 결정
+    timeframes = []
+    if minute % 15 == 14:  ## 15분 봉 마감 직전(매 14, 29, 44, 59분)
+        timeframes.append("15m")
+    if minute == 59:       ## 1시간 봉 마감 직전(매 59분)
+        timeframes.append("1h")
+        if hour % 4 == 0:  ## 4시간 봉 마감 직전(매 0, 4, 8, 12, 16, 20시 59분)
+            timeframes.append("4h")
+        if hour == 8:      ## 1일봉 마감 직전 (매 8시 59분)
+            timeframes.append("1d")
 
-    json_data = None
-    # 4시간 봉 마감 직전인 경우 모든 캔들 데이터 포함
-    if (hour % 4 == 0 and minute == 59):
+    # 포함할 타임프레임이 있으면 한꺼번에 JSON 생성
+    if timeframes:
         json_data = json.dumps({
-        "15m": df_15m.to_dict(orient='records'),
-        "1h":  df_1h.to_dict(orient='records'),
-        "4h":  df_4h.to_dict(orient='records'),
-    })
-    # 1시간 봉 마감 직전인 경우 1시간, 15분 캔들 데이터 포함
-    elif (minute == 59):
-        json_data = json.dumps({
-        "15m": df_15m.to_dict(orient='records'),
-        "1h":  df_1h.to_dict(orient='records'),
-    })
-    # 15분 봉 마감 직전: 15분 캔들 데이터만 포함
-    elif (minute % 15 == 14):
-        json_data = json.dumps({
-        "15m": df_15m.to_dict(orient='records'),
-    })
+            tf: get_cr_dataframe(tf, 25).to_dict(orient="records")
+            for tf in timeframes
+        })
 
     # OpenAI에 질의하기
     client = OpenAI(api_key=OPENAI_API_KEY)
