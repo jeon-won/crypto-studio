@@ -35,7 +35,7 @@ def get_cr_dataframe(timeframe: str, limit: int = 25):
     """
     # DB에서 비트코인 차트 데이터 가져오기
     db.init(POSTGRES_DB)
-    rows = db.select_close(f"btc_{timeframe}", limit)
+    rows = db.select_close(f'"btc_{timeframe}"', limit)
     db.close()
 
     # 비트코인 차트 데이터를 Pandas.DataFrame 데이터로 변환
@@ -60,9 +60,13 @@ if __name__ == "__main__":
     timeframes = []
     if minute % 15 == 14:  ## 15분 봉 마감 직전(매 14, 29, 44, 59분)
         timeframes.append("15m")
+    # if minute % 30 == 29:  ## 30분 봉 마감 직전(매 29, 59분)
+    #     timeframes.append("30m")
     if minute == 59:       ## 1시간 봉 마감 직전(매 59분)
         timeframes.append("1h")
-        if hour % 4 == 0:  ## 4시간 봉 마감 직전(매 0, 4, 8, 12, 16, 20시 59분)
+        # if hour % 2 == 0:  ## 2시간 봉 마감 직전(매 2배수 시 59분)
+        #     timeframes.append("2h")
+        if hour % 4 == 0:  ## 4시간 봉 마감 직전(매 4배수 시 59분)
             timeframes.append("4h")
         if hour == 8:      ## 1일봉 마감 직전 (매 8시 59분)
             timeframes.append("1d")
@@ -75,64 +79,65 @@ if __name__ == "__main__":
         })
 
     # OpenAI에 질의하기
-    client = OpenAI(api_key=OPENAI_API_KEY)
-    response = client.responses.create(
-      model="o4-mini",
-      input=[
-        {
-          "role": "developer",
-          "content": [
+    if json_data != None:
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        response = client.responses.create(
+        model="o4-mini",
+        input=[
             {
-              "type": "input_text",
-              "text": QUERY_AI_RSI_DIVERGENCE
-            }
-          ]
-        },
-        {
-          "role": "user",
-          "content": [
+            "role": "developer",
+            "content": [
+                {
+                "type": "input_text",
+                "text": QUERY_AI_RSI_DIVERGENCE
+                }
+            ]
+            },
             {
-              "type": "input_text",
-              "text": json_data ## 데이터를 JSON으로 넘겨야 분석을 가장 잘 해준다는 미신이(?)
-            }
-          ]
+            "role": "user",
+            "content": [
+                {
+                "type": "input_text",
+                "text": json_data ## 데이터를 JSON으로 넘겨야 분석을 가장 잘 해준다는 미신이(?)
+                }
+            ]
+            },
+            # {
+            #   "role": "assistant",
+            #   "content": [
+            #     {
+            #       "type": "output_text",
+            #       "text": "Long"
+            #     }
+            #   ]
+            # },
+        ],
+        reasoning={
+            "effort": "medium"  ## low, medium, high
         },
-        # {
-        #   "role": "assistant",
-        #   "content": [
-        #     {
-        #       "type": "output_text",
-        #       "text": "Long"
-        #     }
-        #   ]
-        # },
-      ],
-      reasoning={
-        "effort": "medium"  ## low, medium, high
-      },
-    )
+        )
 
-    # 응답 파싱
-    result = json.loads(response.output[1].content[0].text)
-    decision = result.get('decision')
-    time = result.get('time')
-    reason = result.get('reason')
-  
-    # decision 값이 'bullish' 또는 'bearish'인 경우 한글로 변환
-    if decision == 'bullish':
-        decision = '📈 상승 다이버전스'
-    elif decision == 'bearish':
-        decision = '📉 하락 다이버전스'
-    else:
-        pass
+        # 응답 파싱
+        result = json.loads(response.output[1].content[0].text)
+        decision = result.get('decision')
+        time = result.get('time')
+        reason = result.get('reason')
+    
+        # decision 값이 'bullish' 또는 'bearish'인 경우 한글로 변환
+        if decision == 'bullish':
+            decision = '📈 상승 다이버전스'
+        elif decision == 'bearish':
+            decision = '📉 하락 다이버전스'
+        else:
+            pass
 
-    # 메신저로 보낼 메시지 작성
-    message = f"""# {decision} 알림
+        # 메신저로 보낼 메시지 작성
+        message = f"""# {decision} 알림
 * 시간: {current_time.strftime('%Y-%m-%d %H:%M:%S')}
 * 시간대: {time}
 * 판단이유: {reason}"""
-    # print(message)
+        # print(message)
 
-    # 다이버전스 발생 판단 시 디스코드로 메시지 전송
-    if decision != "none":
-        send_discord_message(DISCORD_WEBHOOK_RSI_DIVERGENCE, message)
+        # 다이버전스 발생 판단 시 디스코드로 메시지 전송
+        if decision != "none":
+            send_discord_message(DISCORD_WEBHOOK_RSI_DIVERGENCE, message)
