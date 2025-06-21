@@ -55,17 +55,19 @@ if __name__ == "__main__":
     minute = current_time.minute   ## 현재 분
     second = current_time.second   ## 현재 초
     json_data = None               ## OpenAI에 질의할 비트코인 데이터
+    hour = 0
+    minute=59
 
     # 타임프레임 결정
     timeframes = []
     if minute % 15 == 14:  ## 15분 봉 마감 직전(매 14, 29, 44, 59분)
         timeframes.append("15m")
-    # if minute % 30 == 29:  ## 30분 봉 마감 직전(매 29, 59분)
-    #     timeframes.append("30m")
+    if minute % 30 == 29:  ## 30분 봉 마감 직전(매 29, 59분)
+        timeframes.append("30m")
     if minute == 59:       ## 1시간 봉 마감 직전(매 59분)
         timeframes.append("1h")
-        # if hour % 2 == 0:  ## 2시간 봉 마감 직전(매 2배수 시 59분)
-        #     timeframes.append("2h")
+        if hour % 2 == 0:  ## 2시간 봉 마감 직전(매 2배수 시 59분)
+            timeframes.append("2h")
         if hour % 4 == 0:  ## 4시간 봉 마감 직전(매 4배수 시 59분)
             timeframes.append("4h")
         if hour == 8:      ## 1일봉 마감 직전 (매 8시 59분)
@@ -77,6 +79,7 @@ if __name__ == "__main__":
             tf: get_cr_dataframe(tf, 25).to_dict(orient="records")
             for tf in timeframes
         })
+    print(json_data)
 
     # OpenAI에 질의하기
     if json_data != None:
