@@ -26,8 +26,8 @@ CREATE TABLE btc_15m (
 );
 
 CREATE TABLE btc_30m (
-    time   TIMESTAMPTZ NOT NULL,  -- TIMESTAMPTZ: 타임존이 포함된 타임스탬프
-    open   REAL NOT NULL,         -- REAL: 소수점 최대 6자리 타입(Float4)
+    time   TIMESTAMPTZ NOT NULL,
+    open   REAL NOT NULL,
     high   REAL NOT NULL,
     low    REAL NOT NULL,
     close  REAL NOT NULL,
