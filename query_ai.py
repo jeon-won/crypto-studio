@@ -3,12 +3,12 @@
 """
 from datetime import datetime
 from dotenv import load_dotenv
-from module.messenger import send_discord_message
+from module.messenger import send_discord_message, send_telegram_message
 from openai import OpenAI
 from prompt import QUERY_AI_RSI_DIVERGENCE
 import module.db as db
 import pandas as pd
-import json, os
+import asyncio, json, os
 
 # 상수 --------------------------------------------------
 
@@ -20,6 +20,8 @@ POSTGRES_USER = os.getenv("POSTGRES_USER")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_DB = os.getenv("POSTGRES_DB")
 DISCORD_WEBHOOK_RSI_DIVERGENCE = os.getenv("DISCORD_WEBHOOK_RSI_DIVERGENCE")
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+TELEGRAM_ID = os.getenv("TELEGRAM_ID")
 
 # 함수 --------------------------------------------------
 
@@ -144,3 +146,4 @@ if __name__ == "__main__":
         # 다이버전스 발생 판단 시 디스코드로 메시지 전송
         if decision != "none":
             send_discord_message(DISCORD_WEBHOOK_RSI_DIVERGENCE, message)
+            asyncio.run(send_telegram_message(TELEGRAM_TOKEN, TELEGRAM_ID, message))
