@@ -57,8 +57,6 @@ if __name__ == "__main__":
     minute = current_time.minute   ## 현재 분
     second = current_time.second   ## 현재 초
     json_data = None               ## OpenAI에 질의할 비트코인 데이터
-    hour = 0
-    minute=59
 
     # 타임프레임 결정
     timeframes = []
@@ -81,7 +79,6 @@ if __name__ == "__main__":
             tf: get_cr_dataframe(tf, 25).to_dict(orient="records")
             for tf in timeframes
         })
-    print(json_data)
 
     # OpenAI에 질의하기
     if json_data != None:
@@ -127,7 +124,7 @@ if __name__ == "__main__":
         decision = result.get('decision')
         time = result.get('time')
         reason = result.get('reason')
-    
+        
         # decision 값이 'bullish' 또는 'bearish'인 경우 한글로 변환
         if decision == 'bullish':
             decision = '📈 상승 다이버전스'
@@ -141,7 +138,7 @@ if __name__ == "__main__":
 * 시간: {current_time.strftime('%Y-%m-%d %H:%M:%S')}
 * 시간대: {time}
 * 판단이유: {reason}"""
-        # print(message)
+        print(message)
 
         # 다이버전스 발생 판단 시 디스코드로 메시지 전송
         if decision != "none":
