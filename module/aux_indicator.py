@@ -1,4 +1,5 @@
 import pandas as pd
+from pprint import pprint
 
 def calculate_pivot_std(ohlcv):
     """
@@ -10,15 +11,13 @@ def calculate_pivot_std(ohlcv):
     Returns:
         - dict: 피봇 포인트와 지지/저항선의 딕셔너리(pp: 피봇 포인트, s1: 첫번째 지지선, s2: 두번째 지지선, r1: 첫번째 저항선, r2: 두번째 저항선)
     """
-    # 각 행의 2~5번째(인덱스 1~4) 요소(시가, 고가, 저가, 종가)만 뽑아서 하나의 리스트로 평탄화
-    values = [val
-            for row in ohlcv
-            for val in row[1:5]]
-    
+    # 시간 기준 오름차순 정렬
+    sorted_ohlcv = sorted(ohlcv, key=lambda row: row[0])
+
     # 고가, 저가, 종가, 피봇포인트 값 계산
-    high = max(values)
-    low = min(values)
-    close = ohlcv[-1][4]
+    high = max(row[2] for row in sorted_ohlcv)
+    low = min(row[3] for row in sorted_ohlcv)
+    close = sorted_ohlcv[-1][4]
     pp = (high + low + close) / 3
 
     # 피봇포인트 값과 지지/저항선 값을 딕셔너리에 저장 및 리턴
@@ -42,17 +41,15 @@ def calculate_pivot_fibo(ohlcv):
     Returns:
         - dict: 피봇 포인트와 지지/저항선의 딕셔너리(pp: 피봇 포인트, s1: 첫번째 지지선, s2: 두번째 지지선, s3: 세번째 지지선, r1: 첫번째 저항선, r2: 두번째 저항선, r3: 세번째 저항선)
     """
-    # 각 행의 2~5번째(인덱스 1~4) 요소(시가, 고가, 저가, 종가)만 뽑아서 하나의 리스트로 평탄화
-    values = [val
-            for row in ohlcv
-            for val in row[1:5]]
+    # 시간 기준 오름차순 정렬
+    sorted_ohlcv = sorted(ohlcv, key=lambda row: row[0])
 
-    # 각 행의 2~5번째(인덱스 1~4) 요소(시가, 고가, 저가, 종가)만 뽑아서 하나의 리스트로 평탄화
-    high = max(values)
-    low = min(values)
-    close = ohlcv[-1][4]
+    # 고가, 저가, 종가, 피봇포인트 값 계산
+    high = max(row[2] for row in sorted_ohlcv)
+    low = min(row[3] for row in sorted_ohlcv)
+    close = sorted_ohlcv[-1][4]
     pp = (high + low + close) / 3
-
+    
     # 피봇포인트 값과 지지/저항선 값을 딕셔너리에 저장 및 리턴
     fibo = {
         'pp': pp,  ## 피봇포인트
@@ -76,15 +73,13 @@ def calculate_pivot_camarilla(ohlcv):
     Returns:
         - dict: 피봇 포인트와 지지/저항선의 딕셔너리(pp: 피봇 포인트, s1: 첫번째 지지선, s2: 두번째 지지선, s3: 세번쨰 지지선, s4: 네번째 지지선, r1: 첫번째 저항선, r2: 두번째 저항선, r3: 세번째 저항선, r4: 네번째 저항선)
     """
-    # 각 행의 2~5번째(인덱스 1~4) 요소(시가, 고가, 저가, 종가)만 뽑아서 하나의 리스트로 평탄화
-    values = [val
-            for row in ohlcv
-            for val in row[1:5]]
+    # 시간 기준 오름차순 정렬
+    sorted_ohlcv = sorted(ohlcv, key=lambda row: row[0])
 
-    # 각 행의 2~5번째(인덱스 1~4) 요소(시가, 고가, 저가, 종가)만 뽑아서 하나의 리스트로 평탄화
-    high = max(values)
-    low = min(values)
-    close = ohlcv[-1][4]
+    # 고가, 저가, 종가, 피봇포인트 값 계산
+    high = max(row[2] for row in sorted_ohlcv)
+    low = min(row[3] for row in sorted_ohlcv)
+    close = sorted_ohlcv[-1][4]
     pp = (high + low + close) / 3
 
     # 피봇포인트 값과 지지/저항선 값을 딕셔너리에 저장 및 리턴
