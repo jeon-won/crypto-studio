@@ -179,3 +179,4 @@ cython_debug/
 
 # etc.
 prompt.py
+test.py

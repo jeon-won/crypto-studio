@@ -6,9 +6,10 @@ from dotenv import load_dotenv
 from module.messenger import send_discord_message, send_telegram_message
 from openai import OpenAI
 from prompt import QUERY_AI_RSI_DIVERGENCE
+import module.aux_indicator as aux
 import module.db as db
 import pandas as pd
-import asyncio, json, os
+import asyncio, ccxt, json, os
 
 # 상수 --------------------------------------------------
 
@@ -133,11 +134,24 @@ if __name__ == "__main__":
         else:
             pass
 
+        # 피봇 지지/저항선 계산
+        pivot_data = {}
+        if time != "none":
+            exchange = ccxt.binance({
+                'options': {
+                    'defaultType': 'future' ## 선물 거래소로 설정
+                }
+            })
+            ohlcv = exchange.fetch_ohlcv('BTC/USDT', time, limit=14)
+            pivot_data = aux.calculate_pivot_fibo(ohlcv)
+
         # 메신저로 보낼 메시지 작성
         message = f"""# {decision} 알림
 * 시간: {current_time.strftime('%Y-%m-%d %H:%M:%S')}
 * 시간대: {time}
-* 판단이유: {reason}"""
+* 판단이유: {reason}
+* 피봇 지지선: {"none" if pivot_data.get('s1') is None else round(pivot_data['s1'])}
+* 피봇 저항선: {"none" if pivot_data.get('r1') is None else round(pivot_data['r1'])}"""
         print(message)
 
         # 다이버전스 발생 판단 시 디스코드로 메시지 전송
