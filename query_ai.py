@@ -57,7 +57,7 @@ if __name__ == "__main__":
     hour   = current_time.hour     ## 현재 시
     minute = current_time.minute   ## 현재 분
     second = current_time.second   ## 현재 초
-    json_data = None               ## OpenAI에 질의할 비트코인 데이터
+    json_data = {}                 ## OpenAI에 질의할 비트코인 데이터
 
     # 타임프레임 결정
     timeframes = []
@@ -84,7 +84,7 @@ if __name__ == "__main__":
         })
 
     # OpenAI에 질의하기
-    if json_data != None:
+    if json_data != {}:
         client = OpenAI(api_key=OPENAI_API_KEY)
         response = client.responses.create(
         model="o4-mini",
