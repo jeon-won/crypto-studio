@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from module.messenger import send_discord_message, send_telegram_message
 from openai import OpenAI
 from prompt import QUERY_AI_RSI_DIVERGENCE
+from pprint import pprint
 import module.aux_indicator as aux
 import module.db as db
 import pandas as pd
@@ -55,7 +56,8 @@ if __name__ == "__main__":
     # 변수
     current_time = datetime.now()  ## 현재 시간
     hour   = current_time.hour     ## 현재 시
-    minute = current_time.minute   ## 현재 분
+    # minute = current_time.minute   ## 현재 분
+    minute = 59
     second = current_time.second   ## 현재 초
     json_data = None               ## OpenAI에 질의할 비트코인 데이터
 
@@ -74,11 +76,13 @@ if __name__ == "__main__":
         if hour == 8:      ## 1일봉 마감 직전 (매 8시 59분)
             timeframes.append("1d")
 
-    # 포함할 타임프레임이 있으면 한꺼번에 JSON 생성
+    # 포함할 타임프레임이 있으면 한꺼번에 JSON을 생성하되, 최신 RSI 값에 40 이하 60 이상일 떄만 키를 생성함
     if timeframes:
         json_data = json.dumps({
-            tf: get_cr_dataframe(tf, 25).to_dict(orient="records")
+            tf: data
             for tf in timeframes
+            if (data := get_cr_dataframe(tf, 25).to_dict(orient="records"))
+                and (data[0]["rsi"] <= 40 or data[0]["rsi"] >= 60)
         })
 
     # OpenAI에 질의하기
