@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 from module.messenger import send_discord_message, send_telegram_message
 from openai import OpenAI
 from prompt import QUERY_AI_RSI_DIVERGENCE
-from pprint import pprint
 import module.aux_indicator as aux
 import module.db as db
 import pandas as pd
@@ -56,8 +55,7 @@ if __name__ == "__main__":
     # 변수
     current_time = datetime.now()  ## 현재 시간
     hour   = current_time.hour     ## 현재 시
-    # minute = current_time.minute   ## 현재 분
-    minute = 59
+    minute = current_time.minute   ## 현재 분
     second = current_time.second   ## 현재 초
     json_data = None               ## OpenAI에 질의할 비트코인 데이터
 
