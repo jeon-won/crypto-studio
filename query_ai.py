@@ -55,9 +55,10 @@ if __name__ == "__main__":
     # 변수
     current_time = datetime.now()  ## 현재 시간
     hour   = current_time.hour     ## 현재 시
-    minute = current_time.minute   ## 현재 분
+    # minute = current_time.minute   ## 현재 분
+    minute = 14
     second = current_time.second   ## 현재 초
-    json_data = {}                 ## OpenAI에 질의할 비트코인 데이터
+    json_data = ""                 ## OpenAI에 질의할 비트코인 데이터
 
     # 타임프레임 결정
     timeframes = []
@@ -83,8 +84,8 @@ if __name__ == "__main__":
                 and (data[0]["rsi"] <= 40 or data[0]["rsi"] >= 60)
         })
 
-    # OpenAI에 질의하기
-    if json_data != {}:
+    # 타임프레이별 데이터가 있다면 OpenAI에 질의하기
+    if json_data != "{}":
         client = OpenAI(api_key=OPENAI_API_KEY)
         response = client.responses.create(
         model="o4-mini",
