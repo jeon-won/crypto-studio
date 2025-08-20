@@ -55,8 +55,7 @@ if __name__ == "__main__":
     # 변수
     current_time = datetime.now()  ## 현재 시간
     hour   = current_time.hour     ## 현재 시
-    # minute = current_time.minute   ## 현재 분
-    minute = 14
+    minute = current_time.minute   ## 현재 분
     second = current_time.second   ## 현재 초
     json_data = ""                 ## OpenAI에 질의할 비트코인 데이터
 
